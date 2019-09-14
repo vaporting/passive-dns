@@ -1,0 +1,40 @@
+# Entities
+[IPs] {bgcolor: "#ececfc"}
+ip { label: "bytea, limit 16, unique, not null" }
+type { label: "varchar, limit 4, not null" }
+# index ip for searching
+
+[Domains] {bgcolor: "#ececfc"}
+name { label: "string, unique, not null" }
+# index name for searching
+# index:gin name for regular expession search
+
+[Sources] {bgcolor: "#ececfc"}
+name { label: "string, unique, not null" }
+
+[Resolved_IPs] {bgcolor: "#fcecec"}
+domain_id { label: "bigint, not null"}
+resolved_ip_id { label: "bigint, not null"}
+source_id { label: "bigint, not null"}
+first_seen { label: "bigint, not null"}
+last_seen { label: "bigint, not null"}
+# index first_seen for searching
+# index last_seen for searching
+
+[Resolved_Domains] {bgcolor: "#fcecec"}
+domain_id { label: "bigint, not null"}
+resolved_domain_id { label: "bigint, not null"}
+source_id { label: "bigint, not null"}
+first_seen { label: "bigint, not null"}
+last_seen { label: "bigint, not null"}
+# index first_seen for searching
+# index last_seen for searching
+
+# Relationships
+Resolved_IPs *--1 Domains
+Resolved_IPs *--1 IPs
+Resolved_IPs *--1 Sources
+
+Resolved_Domains *--1 Domains
+Resolved_Domains *--1 Domains
+Resolved_Domains *--1 Sources
