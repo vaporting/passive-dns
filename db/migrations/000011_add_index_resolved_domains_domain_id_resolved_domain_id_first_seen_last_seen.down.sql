@@ -1,0 +1,7 @@
+DROP INDEX index_resolved_domains_on_domain_id;
+
+DROP INDEX index_resolved_domains_on_resolved_domain_id;
+
+DROP INDEX index_resolved_domains_on_first_seen;
+
+DROP INDEX index_resolved_domains_on_last_seen;

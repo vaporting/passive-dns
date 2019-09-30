@@ -1,0 +1,1 @@
+DROP INDEX index_ips_on_ip;
