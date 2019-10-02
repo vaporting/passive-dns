@@ -8,12 +8,12 @@ import (
 
 // ElementDispatcher dispatchs the element entry to the right handler
 type ElementDispatcher struct {
-	handler map[string]elementhandler.ElementHandler
+	handler map[string]elementhandler.IElementHandler
 }
 
 // Init intializes the ElementDispatcher
 func (dispatcher *ElementDispatcher) Init() {
-	dispatcher.handler = make(map[string]elementhandler.ElementHandler)
+	dispatcher.handler = make(map[string]elementhandler.IElementHandler)
 	ipv4Handler := elementhandler.NewIpv4Handler()
 	dispatcher.handler[ipv4Handler.Type] = ipv4Handler
 	ipv6Handler := elementhandler.NewIpv6Handler()
