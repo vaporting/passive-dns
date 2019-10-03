@@ -23,14 +23,12 @@ func (handler *ipHandler) Refresh(entries []string) error {
 	if len(entries) == 0 {
 		return nil
 	}
-	ips := []models.IP{}
-	for _, entry := range entries {
-		ips = append(
-			ips,
-			models.IP{
-				BaseModel: models.BaseModel{CreatedAt: time.Now(), UpdatedAt: time.Now()},
-				IP:        entry,
-				Type:      handler.Type})
+	ips := make([]models.IP, len(entries))
+	for index, entry := range entries {
+		ips[index] = models.IP{
+			BaseModel: models.BaseModel{CreatedAt: time.Now(), UpdatedAt: time.Now()},
+			IP:        entry,
+			Type:      handler.Type}
 	}
 	_, err := handler.db.Model(&ips).OnConflict("DO NOTHING").Insert()
 	return err

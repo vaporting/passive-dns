@@ -23,14 +23,11 @@ func (handler *DomainHandler) Refresh(entries []string) error {
 	if len(entries) == 0 {
 		return nil
 	}
-	domains := []models.Domain{}
-	for _, entry := range entries {
-		domains = append(
-			domains,
-			models.Domain{
-				BaseModel: models.BaseModel{CreatedAt: time.Now(), UpdatedAt: time.Now()},
-				Name:      entry,
-			})
+	domains := make([]models.Domain, len(entries))
+	for index, entry := range entries {
+		domains[index] = models.Domain{
+			BaseModel: models.BaseModel{CreatedAt: time.Now(), UpdatedAt: time.Now()},
+			Name:      entry}
 	}
 	_, err := handler.db.Model(&domains).OnConflict("DO NOTHING").Insert()
 	return err
