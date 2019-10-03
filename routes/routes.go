@@ -10,6 +10,7 @@ import (
 func InitRoutes() *gin.Engine {
 	router := gin.Default()
 	controller := controllers.PassiveDomainsIpsController{}
+	controller.Init()
 	router.PUT("/passive_domains_ips", controller.Update)
 	router.POST("passive_domains_ips/search", controller.Search)
 	return router
