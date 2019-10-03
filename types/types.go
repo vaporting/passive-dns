@@ -1,5 +1,7 @@
 package types
 
+import "time"
+
 // DNS record types
 const (
 	// DNSIpv4Type record type
@@ -17,4 +19,13 @@ type ResolvedEntry struct {
 	Value     string `json:"value"`
 	FirstSeen string `json:"first_seen"`
 	LastSeen  string `json:"last_seen"`
+}
+
+// ResolvedRow is the data before store to resolved table
+type ResolvedRow struct {
+	OriginalID uint
+	PassiveID  uint
+	SourceID   uint
+	FirstSeen  time.Time
+	LastSeen   time.Time
 }
