@@ -6,7 +6,7 @@ import "time"
 type ResolvedIP struct {
 	BaseModel
 	DomainID uint
-	ResolvedIPID uint
+	ResolvedIpID uint
 	SourceID uint
 	FirstSeen time.Time
 	LastSeen time.Time
