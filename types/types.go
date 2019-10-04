@@ -12,6 +12,16 @@ const (
 	DNSDomainType string = "CNAME"
 )
 
+// hunters support source types
+const (
+	// SourceIpsType source type
+	SourceIpsType string = "ips"
+	// SourceDomainsType source type
+	SourceDomainsType string = "domains"
+	// SourcePDomainsType source type
+	SourcePDomainsType string = "parent_domains"
+)
+
 // ResolvedEntry is used to store the resolved entry from request
 type ResolvedEntry struct {
 	Name      string `json:"name"`
@@ -29,3 +39,21 @@ type ResolvedRow struct {
 	FirstSeen  time.Time
 	LastSeen   time.Time
 }
+
+// HuntingSources uses to store all sources from request
+type HuntingSources struct {
+	Ips     []string
+	Domains []string
+	// ParentDomaind []string // currently, not using
+	// StartDate time.Time // currently, not using
+	// EndDate time.Time //currently, not using
+}
+
+// SeenGroup stores pair of first_seen and last_seen
+type SeenGroup struct {
+	FirstSeen string `json:"first_seen"`
+	LastSeen  string `json:"last_seen"`
+}
+
+// TargetDomain is used to build result of hunting by source:ip
+type TargetDomain map[string]*SeenGroup
