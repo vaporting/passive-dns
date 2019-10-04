@@ -3,6 +3,8 @@ package controllers
 import (
 	"fmt"
 
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/go-pg/pg"
@@ -14,7 +16,6 @@ import (
 	"passive-dns/db"
 
 	"passive-dns/models"
-	// "encoding/json"
 )
 
 type updateBody struct {
@@ -22,10 +23,15 @@ type updateBody struct {
 	ResolvedEntries []types.ResolvedEntry `json:"resolved_entries"`
 }
 
+type searchBody struct {
+	types.HuntingSources
+}
+
 // PassiveDomainsIpsController is used to handler request from url: /passive_domains_ips
 type PassiveDomainsIpsController struct {
 	eleDispatcher     dispatcher.ElementDispatcher
 	passiveDispatcher dispatcher.PassiveDispatcher
+	hunterDispatcher  dispatcher.HunterDispatcher
 	db                *pg.DB
 }
 
@@ -34,6 +40,7 @@ func (controller *PassiveDomainsIpsController) Init() error {
 	var err error
 	controller.eleDispatcher.Init()
 	controller.passiveDispatcher.Init()
+	controller.hunterDispatcher.Init()
 	controller.db, err = db.GetDB()
 	return err
 }
@@ -55,12 +62,18 @@ func (controller *PassiveDomainsIpsController) Update(c *gin.Context) {
 			err = controller.passiveDispatcher.Refresh(source.ID, body.ResolvedEntries)
 		}
 	}
-
-	// jsonBytes, _ := json.Marshal(body)
-	// fmt.Println(string(jsonBytes))
 }
 
 // Search is used to find the match passive dns information
 func (controller *PassiveDomainsIpsController) Search(c *gin.Context) {
-	// need implement
+	fmt.Printf("content type is %s\n", c.ContentType())
+	var body searchBody
+	c.BindJSON(&body)
+	fmt.Println(body)
+	resBody, err := controller.hunterDispatcher.Hunt(body.HuntingSources)
+	if err == nil {
+		c.String(http.StatusOK, resBody)
+	} else {
+		c.String(http.StatusInternalServerError, "")
+	}
 }
