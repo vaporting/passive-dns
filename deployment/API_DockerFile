@@ -16,7 +16,13 @@ RUN mkdir api_server
 
 COPY --from=builder /go/src/passive-dns/passive-dns-api /api_server
 
+COPY config.yml /api_server
+
+COPY deployment/script/wait-for-it.sh /api_server
+
 EXPOSE 8080
+
+WORKDIR /api_server
 
 # run server
 CMD ["/bin/bash"]

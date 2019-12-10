@@ -1,0 +1,5 @@
+From postgres:11.6
+
+COPY db/migrations/*.up.sql /docker-entrypoint-initdb.d/
+
+COPY db/data/*.sql /docker-entrypoint-initdb.d/

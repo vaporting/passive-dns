@@ -1,0 +1,1 @@
+INSERT INTO sources (name, created_at, updated_at) VALUES ('common', NOW()::date, NOW()::date);

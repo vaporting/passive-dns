@@ -1,0 +1,27 @@
+version: '3.5'
+
+services:
+  passive-dns-db:
+    image: passive-dns-db
+    container_name: passive-dns-db
+    ports:
+      - "5432:5432"
+    restart: always
+    environment:
+        - POSTGRES_USER=passivedns
+        - POSTGRES_PASSWORD=passivednspassivedns
+        - POSTGRES_DB=passivedns
+    # Uncomment these lines to persist data on the local filesystem.
+        - PGDATA=/var/lib/postgresql/data
+    volumes:
+      - /passive-dns_volume/db:/var/lib/postgresql/data
+  passive-dns-api:
+    image: passive-dns-api
+    container_name: passive-dns-api
+    ports:
+      - "8080:8080"
+    # environment:
+    #   - GIN_MODE=release
+    depends_on:
+      - passive-dns-db
+    command: bash -c "/api_server/wait-for-it.sh passive-dns-db:5432 -t 10 && /api_server/passive-dns-api"
