@@ -1,0 +1,22 @@
+From golang:1.13 AS builder
+
+RUN mkdir /go/src/passive-dns
+
+COPY . /go/src/passive-dns
+
+WORKDIR /go/src/passive-dns
+
+RUN go get -v .
+
+RUN go build -o passive-dns-api passive-dns
+
+From ubuntu:18.04
+
+RUN mkdir api_server
+
+COPY --from=builder /go/src/passive-dns/passive-dns-api /api_server
+
+EXPOSE 8080
+
+# run server
+CMD ["/bin/bash"]
