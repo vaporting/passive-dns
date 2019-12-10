@@ -1,0 +1,7 @@
+# DB configurations
+DB:
+  host: "passive-dns-db"
+  port: "5432"
+  name: "passivedns"
+  user: "passivedns"
+  pwd: "passivednspassivedns"

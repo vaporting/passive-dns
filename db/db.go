@@ -4,19 +4,23 @@ import (
 	"github.com/go-pg/pg"
 
 	"errors"
+
+	"passive-dns/types"
 )
 
 var passiveDB *pg.DB
 
 // InitDB initializes the database only once
-func InitDB() (*pg.DB, error) {
+func InitDB(config *types.Config) (*pg.DB, error) {
 	var err error = nil
 	if passiveDB == nil {
 		passiveDB = pg.Connect(&pg.Options{
-			User:     "",
-			Password: "",
-			Database: "passivedns_dev",
+			Addr:     config.DB.Host + ":" + config.DB.Port,
+			User:     config.DB.User,
+			Password: config.DB.PWD,
+			Database: config.DB.Name,
 		})
+
 		if _, err = passiveDB.Exec("SELECT 1;"); err != nil {
 			passiveDB = nil
 		}

@@ -2,6 +2,17 @@ package types
 
 import "time"
 
+// Config structure
+type Config struct {
+	DB struct {
+		Host string `yaml:"host"`
+		Port string `yaml:"port"`
+		Name string `yaml:"name"`
+		User string `yaml:"user"`
+		PWD  string `yaml:"pwd"`
+	} `yaml:"DB"`
+}
+
 // DNS record types
 const (
 	// DNSIpv4Type record type
