@@ -23,7 +23,9 @@ sudo docker build -t passive-dns-db -f deployment/DB_DockerFile .
 sudo docker-compose -f deployment/docker-compose.yml up
 ```
 
-## API introdution
+## API Document
+* [API document](https://app.swaggerhub.com/apis-docs/vaporting/passive-dns/1.0)
+
 ### /passive_domains_ips/search
 Search targets(ip, domain) and return passive DNS
 * **request**
