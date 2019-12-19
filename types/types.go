@@ -5,11 +5,11 @@ import "time"
 // Config structure
 type Config struct {
 	DB struct {
-		Host string `yaml:"host"`
-		Port string `yaml:"port"`
-		Name string `yaml:"name"`
-		User string `yaml:"user"`
-		PWD  string `yaml:"pwd"`
+		Host string `yaml:"host" envconfig:"DB_HOST" required:"true"`
+		Port string `yaml:"port" envconfig:"DB_PORT" required:"true"`
+		Name string `yaml:"name" envconfig:"DB_NAME" required:"true"`
+		User string `yaml:"user" envconfig:"DB_USER" required:"true"`
+		PWD  string `yaml:"pwd" envconfig:"DB_PWD" required:"true"`
 	} `yaml:"DB"`
 }
 
