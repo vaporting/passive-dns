@@ -159,3 +159,6 @@ Insert resolutions to server
     ```
 * **response**
     * status code: 200
+    
+## System Architecture
+![](system_architecture.png)
