@@ -23,7 +23,8 @@ func readConfig() (*types.Config, error) {
 	if err != nil {
 		fmt.Println(err)
 		// parse from file
-		f, err := os.Open("config.yml")
+		var f *os.File
+		f, err = os.Open("config.yml")
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
