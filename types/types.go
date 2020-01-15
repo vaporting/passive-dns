@@ -11,6 +11,15 @@ type Config struct {
 		User string `yaml:"user" envconfig:"DB_USER" required:"true"`
 		PWD  string `yaml:"pwd" envconfig:"DB_PWD" required:"true"`
 	} `yaml:"DB"`
+	CACHE struct {
+		Host     string `yaml:"host"`
+		Port     string `yaml:"port"`
+		PWD      string `yaml:"pwd"`
+		PoolSize string `yaml:"pool_size"`
+	} `yaml:"CACHE"`
+	SyncSer struct {
+		Writer string `yaml:"writer"`
+	} `yaml:"Sync_service"`
 }
 
 // DNS record types
