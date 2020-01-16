@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"encoding/binary"
 	"fmt"
 
 	"testing"
@@ -12,7 +13,7 @@ import (
 	"passive-dns/models"
 )
 
-func TestResolvedIPStrings(t *testing.T) {
+func TestResolvedIPKeyValues(t *testing.T) {
 	loc, _ := time.LoadLocation("Etc/GMT+0")
 	ele := models.ResolvedIPDIP{
 		ID:        1,
@@ -21,23 +22,29 @@ func TestResolvedIPStrings(t *testing.T) {
 		Dname:     "www.google.com",
 		Ip:        "8.8.8.8",
 		Type:      "A"}
-	expK := "resolved_ip:" + fmt.Sprint(ele.ID)
-	expV := []string{
-		"id",
-		fmt.Sprint(ele.ID),
-		"domain",
+	expK := "r_ip:" + fmt.Sprint(ele.ID)
+	idBytes := make([]byte, 4)
+	binary.LittleEndian.PutUint32(idBytes, uint32(ele.ID))
+	fsBytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(fsBytes, uint64(ele.FirstSeen.Unix()))
+	lsBytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(lsBytes, uint64(ele.LastSeen.Unix()))
+	expV := []interface{}{
+		RIPID,
+		idBytes,
+		RIPDOMAIN,
 		ele.Dname,
-		"ip",
+		RIPIP,
 		ele.Ip,
-		"type",
+		RIPType,
 		ele.Type,
-		"first_seen",
-		ele.FirstSeen.String(),
-		"last_seen",
-		ele.LastSeen.String()}
+		RIPFirstSeen,
+		fsBytes,
+		RIPLastSeen,
+		lsBytes}
 	rEle := NewResolvedIPByModel(ele)
 
-	values := rEle.VStrings()
+	values := rEle.Values()
 
 	assert.Equal(t, expK, rEle.Key)
 	assert.EqualValues(t, expV, values)
