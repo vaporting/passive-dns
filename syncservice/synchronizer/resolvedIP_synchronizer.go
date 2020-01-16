@@ -12,6 +12,7 @@ import (
 	"github.com/go-pg/pg"
 
 	"passive-dns/db"
+
 	"passive-dns/models"
 
 	"passive-dns/cache"
@@ -23,12 +24,14 @@ import (
 
 // ResolvedIPSynchronizer synchronizes resolved_ip between sql db and redis
 type ResolvedIPSynchronizer struct {
-	db       *pg.DB
-	cacher   *redis.Client
-	joinCmd  string
-	writerNo int
-	tube     chan []models.ResolvedIPDIP
-	wg       sync.WaitGroup
+	db         *pg.DB
+	cacher     *redis.Client
+	joinCmd    string
+	writerNo   int
+	tube       chan []models.ResolvedIPDIP
+	wg         sync.WaitGroup
+	mux        sync.Mutex
+	cacheCount int
 
 	// Interface
 	ISynchronizer
@@ -47,15 +50,17 @@ func (syncer *ResolvedIPSynchronizer) Sync() {
 		go syncer.insert()
 	}
 	syncer.wg.Wait()
+	fmt.Println("Total number of element in cache: ", syncer.cacheCount)
 }
 
 func (syncer *ResolvedIPSynchronizer) extract() {
 	defer syncer.wg.Done()
-	eles := []models.ResolvedIPDIP{}
 	var index uint = 0
-	num := 10
+	num := 100000
+	count := 0
 	var err error = nil
 	for err == nil {
+		eles := []models.ResolvedIPDIP{}
 		err = syncer.db.Model(&eles).
 			ColumnExpr("resolved_ip.id, resolved_ip.first_seen, resolved_ip.last_seen").
 			ColumnExpr("domains.name AS dname, encode(ips.ip, 'escape') AS ip, ips.type AS type").
@@ -67,11 +72,24 @@ func (syncer *ResolvedIPSynchronizer) extract() {
 			break
 		}
 		index = eles[len(eles)-1].ID
-		syncer.tube <- eles
+		count += len(eles)
+		next := false
+		for {
+			select {
+			case syncer.tube <- eles:
+				next = true
+			default:
+				time.Sleep(time.Second)
+			}
+			if next {
+				break
+			}
+		}
 	}
 	if err != nil {
 		fmt.Println(err)
 	}
+	fmt.Println("number of element from DB: ", count)
 }
 
 func (syncer *ResolvedIPSynchronizer) insert() {
@@ -85,20 +103,33 @@ func (syncer *ResolvedIPSynchronizer) insert() {
 				rEle := mRedis.NewResolvedIPByModel(eles[i])
 				ipdEle := mRedis.NewIPDomain(eles[i].Ip, rEle.Key)
 				dipEle := mRedis.NewDomainIP(eles[i].Dname, rEle.Key)
-				pipe := syncer.cacher.TxPipeline()
-				pipe.HMSet(rEle.Key, rEle.VStrings())
-				pipe.SAdd(ipdEle.Key, ipdEle.RIPKey)
-				pipe.SAdd(dipEle.Key, dipEle.RIPKey)
-				cmd, err := pipe.Exec()
+				var err error
+				var cmd []redis.Cmder
+				for n := 0; n < 1; n++ {
+					pipe := syncer.cacher.TxPipeline()
+					pipe.HMSet(rEle.Key, rEle.Values()...)
+					pipe.SAdd(ipdEle.Key, ipdEle.RIPKey)
+					pipe.SAdd(dipEle.Key, dipEle.RIPKey)
+					cmd, err = pipe.Exec()
+					if err != nil {
+						time.Sleep(time.Millisecond * 100)
+					} else {
+						break
+					}
+				}
 				if err != nil {
 					fmt.Println(cmd, err)
 				}
 			}
+			syncer.mux.Lock()
+			syncer.cacheCount += len(eles)
+			fmt.Println("Current number in cache: ", syncer.cacheCount)
+			syncer.mux.Unlock()
 			baseT = time.Now()
 		default:
 			time.Sleep(time.Second)
 			curT := time.Now()
-			if curT.Sub(baseT) > time.Second*10 {
+			if curT.Sub(baseT) > time.Second*3 {
 				timeout = true
 			}
 		}
@@ -121,11 +152,13 @@ func NewResolvedIPSynchronizer(config *types.Config) (ResolvedIPSynchronizer, er
 		return ResolvedIPSynchronizer{}, err
 	}
 	writerNo := int(cacher.PoolStats().IdleConns)
+	fmt.Println("number of writer: ", writerNo)
 	return ResolvedIPSynchronizer{
-		db:       db,
-		cacher:   cacher,
-		joinCmd:  joinCmd,
-		writerNo: writerNo,
-		tube:     make(chan []models.ResolvedIPDIP),
-		wg:       sync.WaitGroup{}}, nil
+		db:         db,
+		cacher:     cacher,
+		joinCmd:    joinCmd,
+		writerNo:   writerNo,
+		tube:       make(chan []models.ResolvedIPDIP, writerNo*2),
+		wg:         sync.WaitGroup{},
+		cacheCount: 0}, nil
 }
