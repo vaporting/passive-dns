@@ -37,3 +37,8 @@ func GetCacher() (*redis.Client, error) {
 	}
 	return cacher, nil
 }
+
+// CloseCacher closes cacher
+func CloseCacher() error {
+	return cacher.Close()
+}
