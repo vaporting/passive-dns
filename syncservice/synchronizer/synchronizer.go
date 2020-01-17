@@ -14,5 +14,7 @@ func CreateSyncers(config *types.Config) []ISynchronizer {
 	syncers := []ISynchronizer{}
 	rIPSyncer, _ := NewResolvedIPSynchronizer(config)
 	syncers = append(syncers, &rIPSyncer)
+	rDSyncer, _ := NewResolvedDomainSynchronizer(config)
+	syncers = append(syncers, &rDSyncer)
 	return syncers
 }
