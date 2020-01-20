@@ -2,6 +2,7 @@
 An api service of passive dns
 
 ## How to deploy
+Pleause use branch:master to deploy
 ### Requirement
 * docker (17.05 or higher) // I use multi-stage builds in DockerFile
 * docker-compose
