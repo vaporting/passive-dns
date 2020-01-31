@@ -10,6 +10,8 @@ import (
 	"passive-dns/models"
 )
 
+const RDomainKeyPrefix = "r_d:"
+
 // RDVar describes the ResolvedIP value
 type RDVar int
 
@@ -64,10 +66,36 @@ func (m *ResolvedDomain) Values() []interface{} {
 // NewResolvedDomainByModel creates ResolvedDomain by models.ResolvedIPDD
 func NewResolvedDomainByModel(s models.ResolvedDomainDD) ResolvedDomain {
 	return ResolvedDomain{
-		Key:       "r_d:" + fmt.Sprint(s.ID),
+		Key:       RDomainKeyPrefix + fmt.Sprint(s.ID),
 		ID:        s.ID,
 		Domain:    s.Dname,
 		Cname:     s.Cname,
 		FirstSeen: s.FirstSeen,
 		LastSeen:  s.LastSeen}
+}
+
+// NewResolvedDomainByKeyValues creates ResolvedIp by key values
+func NewResolvedDomainByKeyValues(key string, vals []string) ResolvedDomain {
+	bID := []byte(vals[0])
+	for i := len(bID); i <= 4; i++ {
+		bID = append(bID, 0)
+	}
+	tID := binary.LittleEndian.Uint32(bID)
+	bFirst := []byte(vals[3])
+	for i := len(bFirst); i <= 8; i++ {
+		bFirst = append(bFirst, 0)
+	}
+	tFirst := binary.LittleEndian.Uint64(bFirst)
+	bLast := []byte(vals[4])
+	for i := len(bLast); i <= 8; i++ {
+		bLast = append(bLast, 0)
+	}
+	tLast := binary.LittleEndian.Uint64(bLast)
+	return ResolvedDomain{
+		Key:       key,
+		ID:        uint(tID),
+		Domain:    vals[1],
+		Cname:     vals[2],
+		FirstSeen: time.Unix(int64(tFirst), 0),
+		LastSeen:  time.Unix(int64(tLast), 0)}
 }
