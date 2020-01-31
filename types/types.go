@@ -75,5 +75,5 @@ type SeenGroup struct {
 	LastSeen  string `json:"last_seen"`
 }
 
-// TargetDomain is used to build result of hunting by source:ip
-type TargetDomain map[string]*SeenGroup
+// TargetName is used to build result of hunting by source:ip
+type TargetName map[string]*SeenGroup
