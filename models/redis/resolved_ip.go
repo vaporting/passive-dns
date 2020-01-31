@@ -10,6 +10,8 @@ import (
 	"passive-dns/models"
 )
 
+const RIPKeyPrefix = "r_ip:"
+
 // RIPVar describes the ResolvedIP value
 type RIPVar int
 
@@ -69,11 +71,38 @@ func (m *ResolvedIP) Values() []interface{} {
 // NewResolvedIPByModel creates ResolvedIp by models.ResolvedIPDIP
 func NewResolvedIPByModel(s models.ResolvedIPDIP) ResolvedIP {
 	return ResolvedIP{
-		Key:       "r_ip:" + fmt.Sprint(s.ID),
+		Key:       RIPKeyPrefix + fmt.Sprint(s.ID),
 		ID:        s.ID,
 		Domain:    s.Dname,
 		IP:        s.Ip,
 		Type:      s.Type,
 		FirstSeen: s.FirstSeen,
 		LastSeen:  s.LastSeen}
+}
+
+// NewResolvedIPByKeyValues creates ResolvedIp by key values
+func NewResolvedIPByKeyValues(key string, vals []string) ResolvedIP {
+	bID := []byte(vals[0])
+	for i := len(bID); i <= 4; i++ {
+		bID = append(bID, 0)
+	}
+	tID := binary.LittleEndian.Uint32(bID)
+	bFirst := []byte(vals[4])
+	for i := len(bFirst); i <= 8; i++ {
+		bFirst = append(bFirst, 0)
+	}
+	tFirst := binary.LittleEndian.Uint64(bFirst)
+	bLast := []byte(vals[5])
+	for i := len(bLast); i <= 8; i++ {
+		bLast = append(bLast, 0)
+	}
+	tLast := binary.LittleEndian.Uint64(bLast)
+	return ResolvedIP{
+		Key:       key,
+		ID:        uint(tID),
+		Domain:    vals[1],
+		IP:        vals[2],
+		Type:      vals[3],
+		FirstSeen: time.Unix(int64(tFirst), 0),
+		LastSeen:  time.Unix(int64(tLast), 0)}
 }
