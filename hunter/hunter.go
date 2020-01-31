@@ -1,7 +1,7 @@
 package hunter
 
 import (
-	"github.com/go-pg/pg"
+	"github.com/go-redis/redis/v7"
 )
 
 // IHunter is base interface for polymorphism uses
@@ -11,8 +11,7 @@ type IHunter interface {
 
 type hunter struct {
 	SourceTypes []string
-	joinFmtCmd  string
-	db          *pg.DB
+	cacher      *redis.Client
 
 	// Interface
 	IHunter

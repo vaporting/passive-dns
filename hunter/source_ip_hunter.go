@@ -1,11 +1,13 @@
 package hunter
 
 import (
-	"passive-dns/db"
+	"fmt"
+
+	"passive-dns/cache"
 
 	"passive-dns/types"
 
-	"passive-dns/models"
+	"passive-dns/models/redis"
 
 	"encoding/json"
 )
@@ -17,7 +19,7 @@ type SourceIPHunter struct {
 
 // Hunt hunts targets from sources
 func (hunter *SourceIPHunter) Hunt(sources []string) ([]byte, error) {
-	results := make(map[string][]types.TargetDomain)
+	results := make(map[string][]types.TargetName)
 	for _, source := range sources {
 		result, _ := hunter.huntTargets(source)
 		results[source] = result
@@ -28,35 +30,38 @@ func (hunter *SourceIPHunter) Hunt(sources []string) ([]byte, error) {
 }
 
 // huntTarget hunts targets from source
-func (hunter *SourceIPHunter) huntTargets(source string) ([]types.TargetDomain, error) {
-	rEntries := []models.ResolvedIP{}
-	err := hunter.db.Model(&rEntries).
-		ColumnExpr("resolved_ip.first_seen, resolved_ip.last_seen").
-		ColumnExpr("domain.name AS dname").
-		Join(hunter.joinFmtCmd, source).
-		Order("first_seen ASC").
-		Select()
-
-	results := make([]types.TargetDomain, len(rEntries))
-	for index, entry := range rEntries {
-		results[index] = make(map[string]*types.SeenGroup)
-		results[index][entry.Dname] = &types.SeenGroup{
-			FirstSeen: entry.FirstSeen.Format("2006-01-02"),
-			LastSeen:  entry.LastSeen.Format("2006-01-02")}
+func (hunter *SourceIPHunter) huntTargets(source string) ([]types.TargetName, error) {
+	rIps, err := hunter.cacher.SMembers(redis.IPDomainKeyPrefix + source).Result()
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
 	}
-	return results, err
+	results := []types.TargetName{}
+	for _, rIp := range rIps {
+		vals, err := hunter.cacher.HVals(rIp).Result()
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		realRIp := redis.NewResolvedIPByKeyValues(rIp, vals)
+		temp := types.TargetName{}
+		temp[realRIp.Domain] = &types.SeenGroup{
+			FirstSeen: realRIp.FirstSeen.Format("2006-01-02"),
+			LastSeen:  realRIp.LastSeen.Format("2006-01-02"),
+		}
+		results = append(results, temp)
+	}
+	return results, nil
 }
 
 // NewSourceIPHunter creates SourceIPHunter
-func NewSourceIPHunter() *SourceIPHunter {
-	hunter := SourceIPHunter{hunter: &hunter{}}
-	tempDB, _ := db.GetDB()
-	hunter.db = tempDB
+func NewSourceIPHunter() (*SourceIPHunter, error) {
+	cacher, err := cache.GetCacher()
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+	hunter := SourceIPHunter{hunter: &hunter{cacher: cacher}}
 	hunter.SourceTypes = []string{types.SourceIpsType}
-	hunter.joinFmtCmd =
-		"INNER JOIN sources ON sources.id = resolved_ip.source_id" +
-			" INNER JOIN domains AS domain ON domain.id = resolved_ip.domain_id" +
-			" INNER JOIN ips ON ips.id = resolved_ip.resolved_ip_id" +
-			" AND ips.ip = ?"
-	return &hunter
+	return &hunter, err
 }
