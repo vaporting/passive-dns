@@ -22,11 +22,19 @@ type HunterDispatcher struct {
 // Init intializes the HunterDispatcher
 func (dispatcher *HunterDispatcher) Init() {
 	dispatcher.hunter = make(map[string]hunter.IHunter)
-	sourceIPHunter := hunter.NewSourceIPHunter()
-	for _, sourceType := range sourceIPHunter.SourceTypes {
-		dispatcher.hunter[sourceType] = sourceIPHunter
+	sourceIPHunter, err := hunter.NewSourceIPHunter()
+	if err == nil {
+		for _, sourceType := range sourceIPHunter.SourceTypes {
+			dispatcher.hunter[sourceType] = sourceIPHunter
+		}
 	}
-	dispatcher.tempHunter = hunter.NewSourceIPHunter()
+	sourceDomainHunter, err := hunter.NewSourceDomainHunter()
+	if err == nil {
+		for _, sourceType := range sourceDomainHunter.SourceTypes {
+			dispatcher.hunter[sourceType] = sourceDomainHunter
+		}
+	}
+	dispatcher.tempHunter, _ = hunter.NewSourceIPHunter()
 }
 
 // Hunt hunt the targets from sources
