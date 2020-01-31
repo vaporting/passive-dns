@@ -8,10 +8,10 @@ import (
 
 func TestNewDomainIP(t *testing.T) {
 	domain := "www.google.com"
-	ripKey := "resolved_ip:1"
+	ripKey := RIPKeyPrefix + "1"
 
 	ele := NewDomainIP(domain, ripKey)
 
-	assert.Equal(t, "d_ip:"+domain, ele.Key)
+	assert.Equal(t, DomainIPKeyPrefix+domain, ele.Key)
 	assert.Equal(t, ripKey, ele.RIPKey)
 }
